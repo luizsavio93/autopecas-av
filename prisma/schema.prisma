@@ -1,0 +1,35 @@
+datasource db {
+  provider = "postgresql" // ✅ MUDADO para postgresql
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Produto {
+  id          Int      @id @default(autoincrement())
+  nome        String
+  descricao   String?
+  quantidade  Int
+  preco       Float
+  createdAt   DateTime @default(now()) // ✅ Adicionado
+  updatedAt   DateTime @updatedAt      // ✅ Adicionado
+  vendas      Venda[]
+}
+
+model Venda {
+  id         Int      @id @default(autoincrement())
+  produtoId  Int
+  quantidade Int
+  data       DateTime @default(now())
+  produto    Produto  @relation(fields: [produtoId], references: [id], onDelete: Cascade) // ✅ Adicionado onDelete
+}
+
+model Usuario {
+  id       Int     @id @default(autoincrement())
+  nome     String
+  email    String  @unique
+  senha    String
+  criadoEm DateTime @default(now())
+}
