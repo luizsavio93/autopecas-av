@@ -42,4 +42,4 @@ model Usuario {
   updatedAt DateTime @updatedAt
 
   @@map("usuarios")
-}
+}" " 
