@@ -1,36 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
-  provider = "postgresql" // ✅ MUDADO para postgresql
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
- 
-}
-
 model Produto {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
   nome        String
   descricao   String?
-  quantidade  Int
   preco       Float
-  createdAt   DateTime @default(now()) // 
-  updatedAt   DateTime @updatedAt      // 
+  quantidade  Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   vendas      Venda[]
+
+  @@map("produtos")
 }
 
 model Venda {
-  id         Int      @id @default(autoincrement())
-  produtoId  Int
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  produtoId  String   @db.ObjectId
+  produto    Produto  @relation(fields: [produtoId], references: [id])
   quantidade Int
-  data       DateTime @default(now())
-  produto    Produto  @relation(fields: [produtoId], references: [id], onDelete: Cascade) // 
+  valorTotal Float
+  dataVenda  DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("vendas")
 }
 
 model Usuario {
-  id       Int     @id @default(autoincrement())
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
   nome     String
-  email    String  @unique
+  email    String   @unique
   senha    String
-  criadoEm DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("usuarios")
 }
