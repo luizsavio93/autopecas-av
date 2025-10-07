@@ -46,22 +46,16 @@ export default function VendasPage() {
       });
 
       if (!res.ok) {
-        const erro = await res.json();
-        throw new Error(erro.error || "Erro ao registrar venda");
+        throw new Error("Erro ao registrar venda");
       }
 
-      // ✅ CORREÇÃO: Limpar apenas os campos do formulário de venda
       setProdutoId("");
       setQuantidade("");
-      
-      // Recarregar dados atualizados
       carregarVendas();
       carregarProdutos();
-      
-      alert("Venda registrada com sucesso!");
-    } catch (error: any) {
+    } catch (error) {
       console.error(error);
-      alert(error.message || "Erro ao registrar venda!");
+      alert("Erro ao registrar venda!");
     }
   };
 
@@ -83,6 +77,7 @@ export default function VendasPage() {
 
   // Limpar filtros
   const limparFiltros = () => {
+    setProdutoId("");
     setDataInicial("");
     setDataFinal("");
     carregarVendas();
@@ -107,7 +102,7 @@ export default function VendasPage() {
         <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
           <select
             value={produtoId}
-            onChange={(e) => setProdutoId(e.target.value ? Number(e.target.value) : "")}
+            onChange={(e) => setProdutoId(Number(e.target.value))}
             style={{
               flex: '1',
               minWidth: '200px',
@@ -119,7 +114,7 @@ export default function VendasPage() {
             <option value="">Selecione um produto</option>
             {produtos.map((p) => (
               <option key={p.id} value={p.id}>
-                {p.nome} (Estoque: {p.quantidade})
+                {p.nome} (Qtd: {p.quantidade})
               </option>
             ))}
           </select>
@@ -137,26 +132,24 @@ export default function VendasPage() {
               border: '1px solid #d1d5db',
               borderRadius: '4px'
             }}
-            min="1"
           />
-          
-          <button
-            onClick={registrarVenda}
-            style={{
-              backgroundColor: '#16a34a',
-              color: 'white',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#15803d'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#16a34a'}
-          >
-            Registrar Venda
-          </button>
         </div>
+        <button
+          onClick={registrarVenda}
+          style={{
+            backgroundColor: '#16a34a',
+            color: 'white',
+            padding: '8px 16px',
+            borderRadius: '4px',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'background-color 0.2s'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#15803d'}
+          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#16a34a'}
+        >
+          Registrar Venda
+        </button>
       </div>
 
       {/* Filtros */}
@@ -270,12 +263,10 @@ export default function VendasPage() {
               vendas.map((v: any) => (
                 <tr key={v.id}>
                   <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>{v.id}</td>
-                  <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>
-                    {v.produto?.nome || "Produto não encontrado"}
-                  </td>
+                  <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>{v.produto?.nome}</td>
                   <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>{v.quantidade}</td>
                   <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>
-                    {v.createdAt ? new Date(v.createdAt).toLocaleDateString("pt-BR") : "N/A"}
+                    {new Date(v.data).toLocaleString("pt-BR")}
                   </td>
                 </tr>
               ))
