@@ -8,7 +8,7 @@ export async function GET() {
   try {
     const vendas = await prisma.venda.findMany({
       include: { produto: true }, // inclui nome do produto
-      orderBy: { dataVenda: "desc" }
+      orderBy: { createdAt: "desc" }
     });
     return NextResponse.json(vendas);
   } catch (error) {
