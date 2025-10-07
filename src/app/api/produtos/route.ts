@@ -3,14 +3,12 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// Headers CORS para evitar problemas
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
-// OPTIONS handler para CORS preflight
 export async function OPTIONS() {
   return NextResponse.json({}, { headers: corsHeaders });
 }
@@ -18,13 +16,9 @@ export async function OPTIONS() {
 // GET → listar produtos
 export async function GET() {
   try {
-    console.log("GET /api/produtos - Buscando produtos...");
     const produtos = await prisma.produto.findMany({
       orderBy: { nome: 'asc' }
     });
-    
-    console.log(`GET /api/produtos - ${produtos.length} produtos encontrados`);
-    
     return NextResponse.json(Array.isArray(produtos) ? produtos : [], {
       headers: corsHeaders
     });
@@ -43,12 +37,8 @@ export async function GET() {
 // POST → adicionar produto
 export async function POST(req: Request) {
   try {
-    console.log("POST /api/produtos - Criando novo produto...");
-    
     const body = await req.json();
     const { nome, descricao, quantidade, preco } = body;
-
-    console.log("Dados recebidos:", body);
 
     if (!nome || quantidade == null || preco == null) {
       return NextResponse.json(
@@ -68,8 +58,6 @@ export async function POST(req: Request) {
         preco: Number(preco),
       },
     });
-
-    console.log("POST /api/produtos - Produto criado:", novoProduto.id);
 
     return NextResponse.json(novoProduto, { 
       status: 201,
