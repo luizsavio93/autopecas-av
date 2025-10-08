@@ -7,7 +7,7 @@ export default function EstoquePage() {
   const [quantidade, setQuantidade] = useState<number | "">("");
   const [preco, setPreco] = useState<number | "">("");
   const [produtos, setProdutos] = useState<any[]>([]);
-  const [editandoId, setEditandoId] = useState<number | null>(null);
+  const [editandoId, setEditandoId] = useState<string | null>(null); // ✅ CORRIGIDO: string em vez de number
 
   const getToken = () => localStorage.getItem("token");
 
@@ -87,7 +87,7 @@ export default function EstoquePage() {
     }
   };
 
-  const excluirProduto = async (id: number) => {
+  const excluirProduto = async (id: string) => { // ✅ CORRIGIDO: string em vez de number
     if (!confirm("Tem certeza que deseja excluir este produto?")) return;
 
     try {
