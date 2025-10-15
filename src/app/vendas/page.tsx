@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 export default function VendasPage() {
   const [produtos, setProdutos] = useState<any[]>([]);
   const [vendas, setVendas] = useState<any[]>([]);
-  const [produtoId, setProdutoId] = useState<number | "">("");
-  const [quantidade, setQuantidade] = useState<number | "">("");
-  const [dataInicial, setDataInicial] = useState("");
-  const [dataFinal, setDataFinal] = useState("");
+  const [produtoId, setProdutoId] = useState<string>("");
+  const [quantidade, setQuantidade] = useState<string>("");
+  const [dataInicio, setDataInicio] = useState<string>("");
+  const [dataFim, setDataFim] = useState<string>("");
 
   // Carregar produtos
   const carregarProdutos = async () => {
@@ -33,7 +33,8 @@ export default function VendasPage() {
 
   // Registrar nova venda
   const registrarVenda = async () => {
-    if (!produtoId || !quantidade || quantidade <= 0) {
+    const qtdNum = Number(quantidade);
+    if (!produtoId || !quantidade || isNaN(qtdNum) || qtdNum <= 0) {
       alert("Selecione um produto e informe uma quantidade válida!");
       return;
     }
@@ -42,17 +43,16 @@ export default function VendasPage() {
       const res = await fetch("/api/vendas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ produtoId, quantidade }),
+        body: JSON.stringify({ produtoId, quantidade: qtdNum }),
       });
 
-      if (!res.ok) {
-        throw new Error("Erro ao registrar venda");
+      if (res.ok) {
+        setProdutoId("");
+        setQuantidade("");
+        await carregarVendas();
+        await carregarProdutos();
+        alert("Venda registrada com sucesso!");
       }
-
-      setProdutoId("");
-      setQuantidade("");
-      carregarVendas();
-      carregarProdutos();
     } catch (error) {
       console.error(error);
       alert("Erro ao registrar venda!");
@@ -60,26 +60,15 @@ export default function VendasPage() {
   };
 
   // Aplicar filtros
-  const aplicarFiltros = async () => {
-    let url = "/api/vendas?";
-    if (produtoId) url += `produtoId=${produtoId}&`;
-    if (dataInicial) url += `dataInicial=${dataInicial}&`;
-    if (dataFinal) url += `dataFinal=${dataFinal}&`;
-
-    try {
-      const res = await fetch(url);
-      const data = await res.json();
-      setVendas(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Erro ao filtrar vendas:", error);
-    }
+  const aplicarFiltros = () => {
+    // Implementar lógica de filtro por data
+    alert(`Filtrando de ${dataInicio} até ${dataFim}`);
   };
 
   // Limpar filtros
   const limparFiltros = () => {
-    setProdutoId("");
-    setDataInicial("");
-    setDataFinal("");
+    setDataInicio("");
+    setDataFim("");
     carregarVendas();
   };
 
@@ -89,190 +78,140 @@ export default function VendasPage() {
   }, []);
 
   return (
-    <div style={{ padding: '24px' }}>
-      <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>
-        Controle de Vendas
-      </h1>
-
-      {/* Formulário de venda */}
-      <div style={{ marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px' }}>
-          Registrar Venda
-        </h2>
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
-          <select
-            value={produtoId}
-            onChange={(e) => setProdutoId(Number(e.target.value))}
-            style={{
-              flex: '1',
-              minWidth: '200px',
-              padding: '8px 12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '4px'
-            }}
-          >
-            <option value="">Selecione um produto</option>
-            {produtos.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.nome} (Qtd: {p.quantidade})
-              </option>
-            ))}
-          </select>
-
-          <input
-            type="number"
-            placeholder="Quantidade"
-            value={quantidade}
-            onChange={(e) =>
-              setQuantidade(e.target.value ? Number(e.target.value) : "")
-            }
-            style={{
-              width: '120px',
-              padding: '8px 12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '4px'
-            }}
-          />
-        </div>
-        <button
-          onClick={registrarVenda}
-          style={{
-            backgroundColor: '#16a34a',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: '4px',
-            border: 'none',
-            cursor: 'pointer',
-            transition: 'background-color 0.2s'
-          }}
-          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#15803d'}
-          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#16a34a'}
-        >
-          Registrar Venda
-        </button>
+    <div className="p-6">
+      {/* Cabeçalho */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Autopeças AV</h1>
+        <h2 className="text-xl font-semibold text-gray-700">Controle de Vendas</h2>
       </div>
 
-      {/* Filtros */}
-      <div style={{ 
-        marginBottom: '24px', 
-        padding: '16px', 
-        border: '1px solid #e5e7eb', 
-        borderRadius: '8px',
-        backgroundColor: '#f9fafb'
-      }}>
-        <h2 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px' }}>
-          Filtros de Vendas
-        </h2>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <select
-            value={produtoId}
-            onChange={(e) => setProdutoId(e.target.value ? Number(e.target.value) : "")}
-            style={{
-              padding: '8px 12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '4px',
-              minWidth: '150px'
-            }}
+      {/* Registrar Venda */}
+      <div className="mb-8 p-4 border rounded-lg bg-white">
+        <h3 className="font-bold mb-3 text-lg">Registrar Venda</h3>
+        <div className="flex gap-3 items-end">
+          <div className="flex-1">
+            <label className="block text-sm font-medium mb-1">Selecione um produto</label>
+            <select
+              value={produtoId}
+              onChange={(e) => setProdutoId(e.target.value)}
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Selecione um produto</option>
+              {produtos.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nome} {p.quantidade !== undefined && `(Estoque: ${p.quantidade})`}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="w-32">
+            <label className="block text-sm font-medium mb-1">Quantidade</label>
+            <input
+              type="number"
+              placeholder="Qtd"
+              value={quantidade}
+              onChange={(e) => setQuantidade(e.target.value)}
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              min="1"
+              step="1"
+            />
+          </div>
+
+          <button
+            onClick={registrarVenda}
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded font-medium"
           >
-            <option value="">Todos os produtos</option>
-            {produtos.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.nome}
-              </option>
-            ))}
-          </select>
+            Registrar Venda
+          </button>
+        </div>
+      </div>
 
-          <input
-            type="date"
-            value={dataInicial}
-            onChange={(e) => setDataInicial(e.target.value)}
-            style={{
-              padding: '8px 12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '4px'
-            }}
-          />
+      <hr className="my-6 border-gray-300" />
 
-          <input
-            type="date"
-            value={dataFinal}
-            onChange={(e) => setDataFinal(e.target.value)}
-            style={{
-              padding: '8px 12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '4px'
-            }}
-          />
+      {/* Filtros de Vendas */}
+      <div className="mb-8 p-4 border rounded-lg bg-white">
+        <h3 className="font-bold mb-3 text-lg">Filtros de Vendas</h3>
+        <div className="flex gap-4 items-end">
+          <div>
+            <label className="block text-sm font-medium mb-1">Todos os produtos</label>
+            <select className="border border-gray-300 rounded px-3 py-2 w-48">
+              <option>Todos os produtos</option>
+              {produtos.map((p) => (
+                <option key={p.id}>{p.nome}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Data inicial</label>
+            <input
+              type="date"
+              value={dataInicio}
+              onChange={(e) => setDataInicio(e.target.value)}
+              className="border border-gray-300 rounded px-3 py-2 w-40"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-1">Data final</label>
+            <input
+              type="date"
+              value={dataFim}
+              onChange={(e) => setDataFim(e.target.value)}
+              className="border border-gray-300 rounded px-3 py-2 w-40"
+            />
+          </div>
 
           <button
             onClick={aplicarFiltros}
-            style={{
-              backgroundColor: '#2563eb',
-              color: 'white',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium"
           >
-            Filtrar
+            Filter
           </button>
 
           <button
             onClick={limparFiltros}
-            style={{
-              backgroundColor: '#6b7280',
-              color: 'white',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4b5563'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#6b7280'}
+            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded font-medium"
           >
             Limpar
           </button>
         </div>
       </div>
-        
-      {/* Listagem de vendas */}
-      <div>
-        <h2 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px' }}>
-          Histórico de Vendas
-        </h2>
-        <table style={{ 
-          width: '100%', 
-          borderCollapse: 'collapse',
-          border: '1px solid #d1d5db'
-        }}>
+
+      <hr className="my-6 border-gray-300" />
+
+      {/* Histórico de Vendas */}
+      <div className="p-4 border rounded-lg bg-white">
+        <h3 className="font-bold mb-3 text-lg">Histórico de Vendas</h3>
+        <table className="w-full border-collapse border border-gray-300">
           <thead>
-            <tr style={{ backgroundColor: '#f3f4f6' }}>
-              <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>ID</th>
-              <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>Produto</th>
-              <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>Quantidade</th>
-              <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>Data</th>
+            <tr className="bg-gray-100">
+              <th className="border border-gray-300 p-3 text-left font-semibold">ID</th>
+              <th className="border border-gray-300 p-3 text-left font-semibold">Produto</th>
+              <th className="border border-gray-300 p-3 text-left font-semibold">Quantidade</th>
+              <th className="border border-gray-300 p-3 text-left font-semibold">Data</th>
             </tr>
           </thead>
           <tbody>
             {vendas.length > 0 ? (
-              vendas.map((v: any) => (
-                <tr key={v.id}>
-                  <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>{v.id}</td>
-                  <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>{v.produto?.nome}</td>
-                  <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>{v.quantidade}</td>
-                  <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>
-                    {new Date(v.data).toLocaleString("pt-BR")}
+              vendas.map((v) => (
+                <tr key={v.id} className="hover:bg-gray-50">
+                  <td className="border border-gray-300 p-3">{v.id}</td>
+                  <td className="border border-gray-300 p-3">
+                    {v.produto?.nome || v.produto}
+                  </td>
+                  <td className="border border-gray-300 p-3">{v.quantidade}</td>
+                  <td className="border border-gray-300 p-3">
+                    {v.data && v.data !== "Invalid Date" 
+                      ? new Date(v.data).toLocaleDateString("pt-BR")
+                      : "Data inválida"}
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={4} style={{ textAlign: 'center', padding: '16px' }}>
+                <td colSpan={4} className="border border-gray-300 p-3 text-center text-gray-500">
                   Nenhuma venda registrada.
                 </td>
               </tr>

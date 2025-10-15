@@ -4,38 +4,80 @@ import { useEffect, useState } from "react";
 export default function EstoquePage() {
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
-  const [quantidade, setQuantidade] = useState<number | "">("");
-  const [preco, setPreco] = useState<number | "">("");
+  const [quantidade, setQuantidade] = useState<string>("");
+  const [preco, setPreco] = useState<string>("");
   const [produtos, setProdutos] = useState<any[]>([]);
-  const [editandoId, setEditandoId] = useState<string | null>(null); // ✅ CORRIGIDO: string em vez de number
+  const [editandoId, setEditandoId] = useState<string | null>(null);
 
   const getToken = () => localStorage.getItem("token");
 
+  // ✅ FUNÇÃO ATUALIZADA COM DEBUG
   const carregarProdutos = async () => {
     try {
+      console.log("🔍 Iniciando carregamento de produtos...");
+      
       const token = getToken();
+      console.log("🔍 Token:", token);
+      
       const res = await fetch("/api/produtos", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+      
+      console.log("🔍 Status:", res.status);
+      console.log("🔍 URL:", res.url);
+      
+      // Verifica o tipo de conteúdo
+      const contentType = res.headers.get("content-type");
+      console.log("🔍 Content-Type:", contentType);
+      
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("🔍 Erro HTTP:", res.status, text.substring(0, 500));
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+      
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        console.error("🔍 Resposta não é JSON:", text.substring(0, 500));
+        throw new Error("API retornou HTML em vez de JSON");
+      }
+      
       const data = await res.json();
+      console.log("🔍 Dados recebidos:", data);
 
       if (Array.isArray(data)) {
         setProdutos(data);
       } else {
-        console.warn("Resposta inesperada da API:", data);
+        console.warn("🔍 Resposta inesperada da API:", data);
         setProdutos([]);
       }
     } catch (error) {
-      console.error("Erro ao carregar produtos:", error);
+      console.error("🔍 Erro ao carregar produtos:", error);
       setProdutos([]);
     }
   };
 
+  // ✅ FUNÇÃO CORRIGIDA - tratamento seguro para números
   const salvarProduto = async () => {
-    if (!nome || quantidade === "" || preco === "") {
+    if (!nome || !quantidade || !preco) {
       alert("Preencha todos os campos corretamente!");
+      return;
+    }
+
+    // ✅ Conversão segura para número
+    const quantidadeNum = Number(quantidade);
+    const precoNum = Number(preco);
+
+    // ✅ Validação dos números
+    if (isNaN(quantidadeNum) || isNaN(precoNum)) {
+      alert("Quantidade e preço devem ser números válidos!");
+      return;
+    }
+
+    if (quantidadeNum < 0 || precoNum < 0) {
+      alert("Quantidade e preço não podem ser negativos!");
       return;
     }
 
@@ -51,8 +93,8 @@ export default function EstoquePage() {
           body: JSON.stringify({
             nome,
             descricao,
-            quantidade: Number(quantidade),
-            preco: Number(preco),
+            quantidade: quantidadeNum,
+            preco: precoNum,
           }),
         });
 
@@ -67,8 +109,8 @@ export default function EstoquePage() {
           body: JSON.stringify({
             nome,
             descricao,
-            quantidade: Number(quantidade),
-            preco: Number(preco),
+            quantidade: quantidadeNum,
+            preco: precoNum,
           }),
         });
 
@@ -81,13 +123,15 @@ export default function EstoquePage() {
       setPreco("");
       setEditandoId(null);
       carregarProdutos();
+      alert(editandoId ? "Produto atualizado com sucesso!" : "Produto adicionado com sucesso!");
     } catch (error) {
       console.error(error);
       alert("Erro ao salvar produto!");
     }
   };
 
-  const excluirProduto = async (id: string) => { // ✅ CORRIGIDO: string em vez de number
+  // ✅ FUNÇÃO CORRIGIDA - com melhor tratamento de erro
+  const excluirProduto = async (id: string) => {
     if (!confirm("Tem certeza que deseja excluir este produto?")) return;
 
     try {
@@ -99,20 +143,26 @@ export default function EstoquePage() {
         },
       });
 
-      if (!res.ok) throw new Error("Erro ao excluir produto");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Erro ao excluir produto");
+      }
+
       carregarProdutos();
+      alert("Produto excluído com sucesso!");
     } catch (error) {
-      console.error(error);
-      alert("Erro ao excluir produto!");
+      console.error("Erro ao excluir produto:", error);
+      alert(error instanceof Error ? error.message : "Erro ao excluir produto!");
     }
   };
 
+  // ✅ FUNÇÃO CORRIGIDA - conversão segura ao editar
   const editarProduto = (produto: any) => {
     setEditandoId(produto.id);
-    setNome(produto.nome);
-    setDescricao(produto.descricao);
-    setQuantidade(produto.quantidade);
-    setPreco(produto.preco);
+    setNome(produto.nome || "");
+    setDescricao(produto.descricao || "");
+    setQuantidade(produto.quantidade?.toString() || "");
+    setPreco(produto.preco?.toString() || "");
   };
 
   useEffect(() => {
@@ -161,9 +211,8 @@ export default function EstoquePage() {
             type="number"
             placeholder="Quantidade"
             value={quantidade}
-            onChange={(e) =>
-              setQuantidade(e.target.value ? Number(e.target.value) : "")
-            }
+            onChange={(e) => setQuantidade(e.target.value)}
+            min="0"
             style={{
               width: '120px',
               padding: '8px 12px',
@@ -175,9 +224,9 @@ export default function EstoquePage() {
             type="number"
             placeholder="Preço (R$)"
             value={preco}
-            onChange={(e) =>
-              setPreco(e.target.value ? Number(e.target.value) : "")
-            }
+            onChange={(e) => setPreco(e.target.value)}
+            min="0"
+            step="0.01"
             style={{
               width: '120px',
               padding: '8px 12px',

@@ -40,22 +40,44 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { nome, descricao, quantidade, preco } = body;
 
-    if (!nome || quantidade == null || preco == null) {
+    // ✅ Validação melhorada
+    if (!nome?.trim()) {
       return NextResponse.json(
-        { error: "Campos obrigatórios não preenchidos" },
-        { 
-          status: 400,
-          headers: corsHeaders
-        }
+        { error: "Nome do produto é obrigatório" },
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    if (quantidade == null || preco == null) {
+      return NextResponse.json(
+        { error: "Quantidade e preço são obrigatórios" },
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    const quantidadeNum = Number(quantidade);
+    const precoNum = Number(preco);
+
+    if (isNaN(quantidadeNum) || isNaN(precoNum)) {
+      return NextResponse.json(
+        { error: "Quantidade e preço devem ser números válidos" },
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    if (quantidadeNum < 0 || precoNum < 0) {
+      return NextResponse.json(
+        { error: "Quantidade e preço não podem ser negativos" },
+        { status: 400, headers: corsHeaders }
       );
     }
 
     const novoProduto = await prisma.produto.create({
       data: {
-        nome,
-        descricao: descricao || "",
-        quantidade: Number(quantidade),
-        preco: Number(preco),
+        nome: nome.trim(),
+        descricao: (descricao || "").trim(),
+        quantidade: quantidadeNum,
+        preco: precoNum,
       },
     });
 
