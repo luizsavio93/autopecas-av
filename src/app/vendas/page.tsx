@@ -106,19 +106,16 @@ export default function VendasPage() {
 
       <hr style={{ marginBottom: '24px', border: '1px solid #d1d5db' }} />
 
-      {/* Cabeçalho */}
-      <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>
-        Autopeças AV
-      </h1>
-      <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '24px', color: '#374151' }}>
+      {/* Cabeçalho - REMOVIDO o "Autopeças AV" duplicado */}
+      <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>
         Controle de Vendas
-      </h2>
+      </h1>
 
       {/* Registrar Venda */}
       <div style={{ marginBottom: '24px' }}>
-        <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px' }}>
+        <h2 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px' }}>
           Registrar Venda
-        </h3>
+        </h2>
         <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap', alignItems: 'end' }}>
           <div style={{ flex: '1', minWidth: '250px' }}>
             <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>
@@ -189,9 +186,9 @@ export default function VendasPage() {
 
       {/* Filtros de Vendas */}
       <div style={{ marginBottom: '24px' }}>
-        <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px' }}>
+        <h2 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px' }}>
           Filtros de Vendas
-        </h3>
+        </h2>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'end', flexWrap: 'wrap' }}>
           <div>
             <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '4px' }}>
@@ -293,9 +290,9 @@ export default function VendasPage() {
 
       {/* Histórico de Vendas */}
       <div>
-        <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px' }}>
+        <h2 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px' }}>
           Histórico de Vendas
-        </h3>
+        </h2>
         <table style={{ 
           width: '100%', 
           borderCollapse: 'collapse',
