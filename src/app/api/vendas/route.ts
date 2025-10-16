@@ -62,13 +62,18 @@ export async function GET() {
   }
 }
 
-// POST → registrar venda
+// POST → registrar venda - VERSÃO COM DEBUG COMPLETO
 export async function POST(req: Request) {
   try {
+    console.log("🔄 POST /api/vendas - Iniciando...");
+    
     const body = await req.json();
+    console.log("📦 Dados recebidos:", body);
+    
     const { produtoId, quantidade } = body;
 
     if (!produtoId || !quantidade || quantidade <= 0) {
+      console.log("❌ Validação falhou:", { produtoId, quantidade });
       return NextResponse.json(
         { error: "Produto e quantidade são obrigatórios" },
         { status: 400, headers: corsHeaders }
@@ -76,6 +81,7 @@ export async function POST(req: Request) {
     }
 
     const quantidadeNum = Number(quantidade);
+    console.log("🔍 Buscando produto:", produtoId);
 
     // Verifica se o produto existe
     const produto = await prisma.produto.findUnique({
@@ -83,13 +89,17 @@ export async function POST(req: Request) {
     });
 
     if (!produto) {
+      console.log("❌ Produto não encontrado:", produtoId);
       return NextResponse.json(
         { error: "Produto não encontrado" },
         { status: 404, headers: corsHeaders }
       );
     }
 
+    console.log("✅ Produto encontrado:", produto.nome, "Estoque:", produto.quantidade);
+
     if (produto.quantidade < quantidadeNum) {
+      console.log("❌ Estoque insuficiente:", produto.quantidade, "<", quantidadeNum);
       return NextResponse.json(
         { error: `Estoque insuficiente. Disponível: ${produto.quantidade}` },
         { status: 400, headers: corsHeaders }
@@ -97,24 +107,26 @@ export async function POST(req: Request) {
     }
 
     // Gerar ID curto sequencial
-    // Buscar a última venda para gerar próximo ID
+    console.log("🔍 Buscando última venda para gerar ID...");
     const ultimaVenda = await prisma.venda.findFirst({
       orderBy: { createdAt: "desc" }
     });
     
     let novoId;
     if (ultimaVenda && !isNaN(Number(ultimaVenda.id))) {
-      // Se o ID atual é numérico, incrementa
       novoId = (parseInt(ultimaVenda.id) + 1).toString();
     } else {
-      // Se não tem vendas ou ID não é numérico, começa do total + 1
       const totalVendas = await prisma.venda.count();
       novoId = (totalVendas + 1).toString();
     }
 
+    console.log("🎯 Novo ID gerado:", novoId);
+
     // Usar transação para garantir consistência
+    console.log("💾 Iniciando transação...");
     const resultado = await prisma.$transaction(async (tx) => {
       // Cria a venda com ID curto
+      console.log("📝 Criando venda...");
       const venda = await tx.venda.create({
         data: {
           id: novoId, // ✅ ID curto sequencial
@@ -134,7 +146,10 @@ export async function POST(req: Request) {
         }
       });
 
+      console.log("✅ Venda criada:", venda.id);
+
       // Atualiza o estoque do produto
+      console.log("📦 Atualizando estoque...");
       await tx.produto.update({
         where: { id: produtoId },
         data: {
@@ -142,12 +157,13 @@ export async function POST(req: Request) {
         },
       });
 
+      console.log("✅ Estoque atualizado");
       return venda;
     });
 
     // Formatar resposta para compatibilidade
     const vendaFormatada = {
-      id: resultado.id, // ✅ Já será o ID curto
+      id: resultado.id,
       produto: {
         id: resultado.produto.id,
         nome: resultado.produto.nome,
@@ -158,14 +174,22 @@ export async function POST(req: Request) {
       valorTotal: resultado.valorTotal
     };
 
+    console.log("🎉 Venda registrada com sucesso:", vendaFormatada);
+    
     return NextResponse.json(vendaFormatada, { 
       status: 201, 
       headers: corsHeaders 
     });
-  } catch (error) {
-    console.error("Erro no POST /api/vendas:", error);
+    
+  } catch (error: any) {
+    console.error("💥 ERRO NO POST /api/vendas:", error);
+    console.error("💥 Stack trace:", error.stack);
+    
     return NextResponse.json(
-      { error: "Erro ao registrar venda" },
+      { 
+        error: "Erro ao registrar venda", 
+        details: error.message 
+      },
       { status: 500, headers: corsHeaders }
     );
   }
