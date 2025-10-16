@@ -33,31 +33,47 @@ export default function VendasPage() {
 
   // Registrar nova venda
   const registrarVenda = async () => {
-    const qtdNum = Number(quantidade);
-    if (!produtoId || !quantidade || isNaN(qtdNum) || qtdNum <= 0) {
-      alert("Selecione um produto e informe uma quantidade válida!");
+  const qtdNum = Number(quantidade);
+  if (!produtoId || !quantidade || isNaN(qtdNum) || qtdNum <= 0) {
+    alert("Selecione um produto e informe uma quantidade válida!");
+    return;
+  }
+
+  console.log("🔄 Tentando registrar venda...", { produtoId, quantidade: qtdNum });
+
+  try {
+    const res = await fetch("/api/vendas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        produtoId, 
+        quantidade: qtdNum 
+      }),
+    });
+
+    console.log("📡 Resposta da API:", res.status, res.statusText);
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("❌ Erro da API:", errorText);
+      alert(`Erro ao registrar venda: ${res.status} ${res.statusText}`);
       return;
     }
 
-    try {
-      const res = await fetch("/api/vendas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ produtoId, quantidade: qtdNum }),
-      });
+    const data = await res.json();
+    console.log("✅ Venda registrada com sucesso:", data);
 
-      if (res.ok) {
-        setProdutoId("");
-        setQuantidade("");
-        await carregarVendas();
-        await carregarProdutos();
-        alert("Venda registrada com sucesso!");
-      }
-    } catch (error) {
-      console.error(error);
-      alert("Erro ao registrar venda!");
-    }
-  };
+    setProdutoId("");
+    setQuantidade("");
+    await carregarVendas();
+    await carregarProdutos();
+    alert("Venda registrada com sucesso!");
+    
+  } catch (error) {
+    console.error("💥 Erro ao registrar venda:", error);
+    alert("Erro ao registrar venda! Verifique o console.");
+  }
+};
 
   // Aplicar filtros
   const aplicarFiltros = () => {
