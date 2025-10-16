@@ -195,9 +195,12 @@ export default function VendasPage() {
           </thead>
           <tbody>
             {vendas.length > 0 ? (
-              vendas.map((v) => (
+              vendas.map((v, index) => (
                 <tr key={v.id} className="hover:bg-gray-50">
-                  <td className="border border-gray-300 p-3">{v.id}</td>
+                  {/* ✅ LINHA ATUALIZADA - IDs curtos baseados na posição (mais recente = ID maior) */}
+                  <td className="border border-gray-300 p-3">
+                    {v.id && v.id.length > 10 ? (vendas.length - index).toString() : v.id}
+                  </td>
                   <td className="border border-gray-300 p-3">
                     {v.produto?.nome || v.produto}
                   </td>

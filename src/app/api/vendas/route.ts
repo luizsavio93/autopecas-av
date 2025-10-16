@@ -30,18 +30,27 @@ export async function GET() {
       orderBy: { createdAt: "desc" }
     });
     
-    // Formatar os dados para compatibilidade com a página
-    const vendasFormatadas = vendas.map(venda => ({
-      id: venda.id,
-      produto: {
-        id: venda.produto.id,
-        nome: venda.produto.nome,
-        quantidade: venda.produto.quantidade
-      },
-      quantidade: venda.quantidade,
-      data: venda.createdAt.toISOString(),
-      valorTotal: venda.valorTotal
-    }));
+    // ✅ FORÇAR IDs CURTOS - método garantido
+    const vendasFormatadas = vendas.map((venda, index) => {
+      // Gerar ID curto baseado na posição (mais recente = ID maior)
+      const idCurto = (vendas.length - index).toString();
+      
+      return {
+        id: idCurto, // ✅ SEMPRE ID CURTO
+        produto: {
+          id: venda.produto.id,
+          nome: venda.produto.nome,
+          quantidade: venda.produto.quantidade
+        },
+        quantidade: venda.quantidade,
+        data: venda.createdAt.toISOString(),
+        valorTotal: venda.valorTotal,
+        // Para debug - remover depois
+        _idOriginal: venda.id
+      };
+    });
+    
+    console.log('📦 Vendas formatadas com IDs curtos:', vendasFormatadas.length);
     
     return NextResponse.json(vendasFormatadas, { headers: corsHeaders });
   } catch (error) {
@@ -87,11 +96,28 @@ export async function POST(req: Request) {
       );
     }
 
+    // Gerar ID curto sequencial
+    // Buscar a última venda para gerar próximo ID
+    const ultimaVenda = await prisma.venda.findFirst({
+      orderBy: { createdAt: "desc" }
+    });
+    
+    let novoId;
+    if (ultimaVenda && !isNaN(Number(ultimaVenda.id))) {
+      // Se o ID atual é numérico, incrementa
+      novoId = (parseInt(ultimaVenda.id) + 1).toString();
+    } else {
+      // Se não tem vendas ou ID não é numérico, começa do total + 1
+      const totalVendas = await prisma.venda.count();
+      novoId = (totalVendas + 1).toString();
+    }
+
     // Usar transação para garantir consistência
     const resultado = await prisma.$transaction(async (tx) => {
-      // Cria a venda
+      // Cria a venda com ID curto
       const venda = await tx.venda.create({
         data: {
+          id: novoId, // ✅ ID curto sequencial
           produtoId: produtoId,
           quantidade: quantidadeNum,
           valorTotal: produto.preco * quantidadeNum,
@@ -121,7 +147,7 @@ export async function POST(req: Request) {
 
     // Formatar resposta para compatibilidade
     const vendaFormatada = {
-      id: resultado.id,
+      id: resultado.id, // ✅ Já será o ID curto
       produto: {
         id: resultado.produto.id,
         nome: resultado.produto.nome,

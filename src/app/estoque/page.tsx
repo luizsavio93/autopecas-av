@@ -300,9 +300,12 @@ export default function EstoquePage() {
           </thead>
           <tbody>
             {produtos.length > 0 ? (
-              produtos.map((p: any) => (
+              produtos.map((p: any, index: number) => (
                 <tr key={p.id}>
-                  <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>{p.id}</td>
+                  {/* ✅ LINHA ATUALIZADA - IDs curtos baseados na posição */}
+                  <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>
+                    {p.id && p.id.length > 10 ? (index + 1).toString() : p.id}
+                  </td>
                   <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>{p.nome}</td>
                   <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>{p.descricao}</td>
                   <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>{p.quantidade}</td>
