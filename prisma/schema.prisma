@@ -21,15 +21,13 @@ model Produto {
 }
 
 model Venda {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  produtoId  String   @db.ObjectId
-  produto    Produto  @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+  id        String   @id @default("")  // ✅ Permite IDs curtos
+  produtoId String
+  produto   Produto  @relation(fields: [produtoId], references: [id], onDelete: Cascade)
   quantidade Int
   valorTotal Float
-  dataVenda  DateTime @default(now())
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
+  createdAt DateTime @default(now())
+  
   @@map("vendas")
 }
 
