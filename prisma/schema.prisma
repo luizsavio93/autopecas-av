@@ -21,7 +21,7 @@ model Produto {
 }
 
 model Venda {
-  id        String   @id @default("")  // ✅ Permite IDs curtos
+  id        String   @id @default("") @map("_id")  // ✅ Adicione @map("_id")
   produtoId String
   produto   Produto  @relation(fields: [produtoId], references: [id], onDelete: Cascade)
   quantidade Int
