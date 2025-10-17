@@ -8,6 +8,8 @@ export default function ClientesPage() {
   const [telefone, setTelefone] = useState("");
   const [cpf, setCpf] = useState("");
   const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [busca, setBusca] = useState("");
+  const [carregando, setCarregando] = useState(false);
 
   // Formatar CPF enquanto digita
   const formatarCPF = (value: string) => {
@@ -27,37 +29,83 @@ export default function ClientesPage() {
     return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
   };
 
+  // ✅ VALIDAÇÃO DE CPF COMPLETA
+  const validarCPF = (cpf: string) => {
+    cpf = cpf.replace(/\D/g, '');
+    
+    if (cpf.length !== 11) return false;
+    
+    // Elimina CPFs com todos os dígitos iguais
+    if (/^(\d)\1+$/.test(cpf)) return false;
+    
+    // Valida 1º dígito verificador
+    let soma = 0;
+    for (let i = 0; i < 9; i++) {
+      soma += parseInt(cpf.charAt(i)) * (10 - i);
+    }
+    let resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+    if (resto !== parseInt(cpf.charAt(9))) return false;
+    
+    // Valida 2º dígito verificador
+    soma = 0;
+    for (let i = 0; i < 10; i++) {
+      soma += parseInt(cpf.charAt(i)) * (11 - i);
+    }
+    resto = (soma * 10) % 11;
+    if (resto === 10 || resto === 11) resto = 0;
+    if (resto !== parseInt(cpf.charAt(10))) return false;
+    
+    return true;
+  };
+
+  // ✅ VALIDAÇÃO DE EMAIL
+  const validarEmail = (email: string) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+
   // Carregar clientes
   const carregarClientes = async () => {
+    setCarregando(true);
     try {
       const res = await fetch("/api/clientes");
       const data = await res.json();
       setClientes(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Erro ao carregar clientes:", error);
+      alert("Erro ao carregar clientes!");
+    } finally {
+      setCarregando(false);
     }
   };
 
   // Salvar/Editar cliente
   const salvarCliente = async () => {
-    if (!nome) {
+    if (!nome.trim()) {
       alert("Preencha o nome do cliente!");
       return;
     }
 
-    // Validar CPF básico (apenas verifica se tem 11 dígitos)
+    // Validar CPF
     const cpfNumeros = cpf.replace(/\D/g, '');
-    if (cpfNumeros && cpfNumeros.length !== 11) {
-      alert("CPF deve ter 11 dígitos!");
+    if (cpfNumeros && !validarCPF(cpfNumeros)) {
+      alert("CPF inválido!");
+      return;
+    }
+
+    // Validar email
+    if (email && !validarEmail(email)) {
+      alert("E-mail inválido!");
       return;
     }
 
     try {
       const clienteData = { 
-        nome, 
-        email, 
-        telefone: telefone.replace(/\D/g, ''),
-        cpf: cpfNumeros 
+        nome: nome.trim(), 
+        email: email.trim() || null,
+        telefone: telefone.replace(/\D/g, '') || null,
+        cpf: cpfNumeros || null
       };
 
       if (editandoId) {
@@ -112,6 +160,14 @@ export default function ClientesPage() {
     setCpf(cliente.cpf ? formatarCPF(cliente.cpf) : "");
   };
 
+  // ✅ CLIENTES FILTRADOS PELA BUSCA
+  const clientesFiltrados = clientes.filter(cliente =>
+    cliente.nome.toLowerCase().includes(busca.toLowerCase()) ||
+    cliente.cpf?.includes(busca) ||
+    cliente.email?.toLowerCase().includes(busca.toLowerCase()) ||
+    cliente.telefone?.includes(busca)
+  );
+
   useEffect(() => {
     carregarClientes();
   }, []);
@@ -130,7 +186,7 @@ export default function ClientesPage() {
         <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
           <input
             type="text"
-            placeholder="Nome completo"
+            placeholder="Nome completo *"
             value={nome}
             onChange={(e) => setNome(e.target.value)}
             style={{
@@ -224,92 +280,116 @@ export default function ClientesPage() {
         )}
       </div>
 
+      {/* ✅ BUSCA DE CLIENTES */}
+      <div style={{ marginBottom: '16px' }}>
+        <input
+          type="text"
+          placeholder="Buscar clientes por nome, CPF, email ou telefone..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          style={{
+            width: '100%',
+            maxWidth: '400px',
+            padding: '8px 12px',
+            border: '1px solid #d1d5db',
+            borderRadius: '4px'
+          }}
+        />
+      </div>
+
       {/* Tabela de Clientes */}
       <div>
         <h2 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px' }}>
-          Clientes Cadastrados
+          Clientes Cadastrados {clientesFiltrados.length > 0 && `(${clientesFiltrados.length})`}
         </h2>
-        <table style={{ 
-          width: '100%', 
-          borderCollapse: 'collapse',
-          border: '1px solid #d1d5db'
-        }}>
-          <thead>
-            <tr style={{ backgroundColor: '#f3f4f6' }}>
-              <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>ID</th>
-              <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>Nome</th>
-              <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>CPF</th>
-              <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>E-mail</th>
-              <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>Telefone</th>
-              <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {clientes.length > 0 ? (
-              clientes.map((cliente: any, index: number) => (
-                <tr key={cliente.id}>
-                  <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>
-                    {cliente.id && cliente.id.length > 10 ? (index + 1).toString() : cliente.id}
-                  </td>
-                  <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>{cliente.nome}</td>
-                  <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>
-                    {cliente.cpf ? formatarCPF(cliente.cpf) : '-'}
-                  </td>
-                  <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>
-                    {cliente.email || '-'}
-                  </td>
-                  <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>
-                    {cliente.telefone ? formatarTelefone(cliente.telefone) : '-'}
-                  </td>
-                  <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                      <button
-                        onClick={() => editarCliente(cliente)}
-                        style={{
-                          backgroundColor: '#d97706',
-                          color: 'white',
-                          padding: '4px 8px',
-                          borderRadius: '4px',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontSize: '12px',
-                          transition: 'background-color 0.2s'
-                        }}
-                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#b45309'}
-                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#d97706'}
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => excluirCliente(cliente.id)}
-                        style={{
-                          backgroundColor: '#dc2626',
-                          color: 'white',
-                          padding: '4px 8px',
-                          borderRadius: '4px',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontSize: '12px',
-                          transition: 'background-color 0.2s'
-                        }}
-                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#b91c1c'}
-                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
-                      >
-                        Excluir
-                      </button>
-                    </div>
+        
+        {carregando ? (
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            Carregando clientes...
+          </div>
+        ) : (
+          <table style={{ 
+            width: '100%', 
+            borderCollapse: 'collapse',
+            border: '1px solid #d1d5db'
+          }}>
+            <thead>
+              <tr style={{ backgroundColor: '#f3f4f6' }}>
+                <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>ID</th>
+                <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>Nome</th>
+                <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>CPF</th>
+                <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>E-mail</th>
+                <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>Telefone</th>
+                <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {clientesFiltrados.length > 0 ? (
+                clientesFiltrados.map((cliente: any, index: number) => (
+                  <tr key={cliente.id}>
+                    <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>
+                      {index + 1}
+                    </td>
+                    <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>{cliente.nome}</td>
+                    <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>
+                      {cliente.cpf ? formatarCPF(cliente.cpf) : '-'}
+                    </td>
+                    <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>
+                      {cliente.email || '-'}
+                    </td>
+                    <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>
+                      {cliente.telefone ? formatarTelefone(cliente.telefone) : '-'}
+                    </td>
+                    <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        <button
+                          onClick={() => editarCliente(cliente)}
+                          style={{
+                            backgroundColor: '#d97706',
+                            color: 'white',
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            transition: 'background-color 0.2s'
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#b45309'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#d97706'}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => excluirCliente(cliente.id)}
+                          style={{
+                            backgroundColor: '#dc2626',
+                            color: 'white',
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            transition: 'background-color 0.2s'
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#b91c1c'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '16px' }}>
+                    {busca ? "Nenhum cliente encontrado para a busca." : "Nenhum cliente cadastrado."}
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={6} style={{ textAlign: 'center', padding: '16px' }}>
-                  Nenhum cliente cadastrado.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

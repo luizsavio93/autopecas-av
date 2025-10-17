@@ -3,57 +3,44 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// GET → gerar relatórios de vendas
+// GET - Exportar relatórios em CSV
 export async function GET() {
   try {
-    // total de vendas
-    const totalVendas = await prisma.venda.count();
-
-    // faturamento total
-    const faturamento = await prisma.venda.aggregate({
-      _sum: { quantidade: true },
+    const vendas = await prisma.venda.findMany({
+      include: {
+        produto: true,
+        cliente: true,
+      },
+      orderBy: { data: 'desc' }
     });
 
-    // faturamento em R$ (considerando preço * quantidade)
-    const vendasDetalhadas = await prisma.venda.findMany({
-      include: { produto: true },
+    // Cabeçalho do CSV
+    let csv = "Data,Produto,Cliente,Quantidade,Preço Unitário,Valor Total\n";
+    
+    // Dados
+    vendas.forEach(venda => {
+      const data = new Date(venda.data).toLocaleDateString('pt-BR');
+      const produto = venda.produto.nome;
+      const cliente = venda.cliente?.nome || "Cliente não identificado";
+      const quantidade = venda.quantidade;
+      const precoUnitario = venda.produto.preco;
+      const valorTotal = quantidade * precoUnitario;
+      
+      csv += `"${data}","${produto}","${cliente}",${quantidade},${precoUnitario},${valorTotal}\n`;
     });
 
-    const faturamentoTotal = vendasDetalhadas.reduce(
-      (acc, v) => acc + v.quantidade * (v.produto?.preco || 0),
-      0
-    );
-
-    // produtos mais vendidos
-    const produtosMaisVendidos = await prisma.venda.groupBy({
-      by: ["produtoId"],
-      _sum: { quantidade: true },
-      orderBy: { _sum: { quantidade: "desc" } },
-      take: 5,
-    });
-
-    // junta com nomes dos produtos
-    const produtosComNome = await Promise.all(
-      produtosMaisVendidos.map(async (item) => {
-        const produto = await prisma.produto.findUnique({
-          where: { id: item.produtoId },
-        });
-        return {
-          produto: produto?.nome || "Desconhecido",
-          quantidade: item._sum.quantidade || 0,
-        };
-      })
-    );
-
-    return NextResponse.json({
-      totalVendas,
-      faturamentoTotal,
-      produtosMaisVendidos: produtosComNome,
+    // Retornar como arquivo CSV
+    return new NextResponse(csv, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/csv',
+        'Content-Disposition': 'attachment; filename="relatorio-vendas.csv"',
+      },
     });
   } catch (error) {
-    console.error("Erro no GET /api/relatorios:", error);
+    console.error("Erro ao exportar CSV:", error);
     return NextResponse.json(
-      { error: "Erro ao gerar relatórios" },
+      { error: "Erro ao exportar relatório" },
       { status: 500 }
     );
   }
