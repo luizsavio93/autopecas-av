@@ -134,6 +134,22 @@ export default function RootLayout({
                 >
                   Vendas
                 </Link>
+                {/* NOVO LINK PARA CLIENTES */}
+                <Link 
+                  href="/clientes" 
+                  style={{ 
+                    padding: '8px', 
+                    borderRadius: '4px',
+                    textDecoration: 'none',
+                    color: 'white',
+                    transition: 'background-color 0.2s',
+                    display: 'block'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1e3a8a'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  Clientes
+                </Link>
                 <Link 
                   href="/relatorios" 
                   style={{ 

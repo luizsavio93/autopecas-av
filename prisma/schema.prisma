@@ -20,15 +20,24 @@ model Produto {
   @@map("produtos")
 }
 
-model Venda {
-  id        String   @id @default("") @map("_id")  // ✅ Adicione @map("_id")
-  produtoId String
-  produto   Produto  @relation(fields: [produtoId], references: [id], onDelete: Cascade)
-  quantidade Int
-  valorTotal Float
+model Cliente {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  nome      String
+  email     String?
+  telefone  String?
+  cpf       String?   @unique
+  vendas    Venda[]
   createdAt DateTime @default(now())
-  
-  @@map("vendas")
+}
+
+model Venda {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  produto   Produto  @relation(fields: [produtoId], references: [id])
+  produtoId String   @db.ObjectId
+  cliente   Cliente? @relation(fields: [clienteId], references: [id])
+  clienteId String?  @db.ObjectId
+  quantidade Int
+  data      DateTime @default(now())
 }
 
 model Usuario {
