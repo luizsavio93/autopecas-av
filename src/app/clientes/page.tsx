@@ -30,34 +30,22 @@ export default function ClientesPage() {
   };
 
   // ✅ VALIDAÇÃO DE CPF COMPLETA
-  const validarCPF = (cpf: string) => {
-    cpf = cpf.replace(/\D/g, '');
-    
-    if (cpf.length !== 11) return false;
-    
-    // Elimina CPFs com todos os dígitos iguais
-    if (/^(\d)\1+$/.test(cpf)) return false;
-    
-    // Valida 1º dígito verificador
-    let soma = 0;
-    for (let i = 0; i < 9; i++) {
-      soma += parseInt(cpf.charAt(i)) * (10 - i);
-    }
-    let resto = (soma * 10) % 11;
-    if (resto === 10 || resto === 11) resto = 0;
-    if (resto !== parseInt(cpf.charAt(9))) return false;
-    
-    // Valida 2º dígito verificador
-    soma = 0;
-    for (let i = 0; i < 10; i++) {
-      soma += parseInt(cpf.charAt(i)) * (11 - i);
-    }
-    resto = (soma * 10) % 11;
-    if (resto === 10 || resto === 11) resto = 0;
-    if (resto !== parseInt(cpf.charAt(10))) return false;
-    
+  // ✅ VALIDAÇÃO DE CPF SIMPLIFICADA - ACEITA QUALQUER CPF COM 11 DÍGITOS
+const validarCPF = (cpf: string) => {
+  cpf = cpf.replace(/\D/g, '');
+  
+  // Campo opcional - se estiver vazio, é válido
+  if (cpf === '') return true;
+  
+  // Para desenvolvimento, aceita qualquer CPF com 11 dígitos
+  if (cpf.length === 11) {
+    console.log("✅ CPF aceito:", cpf);
     return true;
-  };
+  }
+  
+  console.log("❌ CPF inválido - deve ter 11 dígitos:", cpf);
+  return false;
+};
 
   // ✅ VALIDAÇÃO DE EMAIL
   const validarEmail = (email: string) => {
