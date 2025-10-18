@@ -5,7 +5,13 @@ export default function FornecedoresPage() {
   const [fornecedores, setFornecedores] = useState<any[]>([]);
   const [razaoSocial, setRazaoSocial] = useState("");
   const [cnpj, setCnpj] = useState("");
-  const [endereco, setEndereco] = useState("");
+  const [logradouro, setLogradouro] = useState("");
+  const [numero, setNumero] = useState("");
+  const [complemento, setComplemento] = useState("");
+  const [bairro, setBairro] = useState("");
+  const [cidade, setCidade] = useState("");
+  const [estado, setEstado] = useState("");
+  const [cep, setCep] = useState("");
   const [telefone, setTelefone] = useState("");
   const [email, setEmail] = useState("");
   const [editandoId, setEditandoId] = useState<string | null>(null);
@@ -29,6 +35,13 @@ export default function FornecedoresPage() {
       return numbers.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
     }
     return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+  };
+
+  // Formatar CEP enquanto digita
+  const formatarCEP = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 5) return numbers;
+    return `${numbers.slice(0, 5)}-${numbers.slice(5, 8)}`;
   };
 
   // Carregar fornecedores
@@ -57,9 +70,15 @@ export default function FornecedoresPage() {
       const fornecedorData = { 
         razaoSocial: razaoSocial.trim(), 
         cnpj: cnpj.replace(/\D/g, '') || null,
-        endereco: endereco.trim() || null,
-        telefone: telefone.replace(/\D/g, '') || null,
         email: email.trim() || null,
+        telefone: telefone.replace(/\D/g, '') || null,
+        logradouro: logradouro.trim() || null,
+        numero: numero.trim() || null,
+        complemento: complemento.trim() || null,
+        bairro: bairro.trim() || null,
+        cidade: cidade.trim() || null,
+        estado: estado.trim() || null,
+        cep: cep.replace(/\D/g, '') || null,
       };
 
       if (editandoId) {
@@ -79,7 +98,13 @@ export default function FornecedoresPage() {
       // Limpar formulário
       setRazaoSocial("");
       setCnpj("");
-      setEndereco("");
+      setLogradouro("");
+      setNumero("");
+      setComplemento("");
+      setBairro("");
+      setCidade("");
+      setEstado("");
+      setCep("");
       setTelefone("");
       setEmail("");
       setEditandoId(null);
@@ -111,7 +136,13 @@ export default function FornecedoresPage() {
     setEditandoId(fornecedor.id);
     setRazaoSocial(fornecedor.razaoSocial || "");
     setCnpj(fornecedor.cnpj ? formatarCNPJ(fornecedor.cnpj) : "");
-    setEndereco(fornecedor.endereco || "");
+    setLogradouro(fornecedor.logradouro || "");
+    setNumero(fornecedor.numero || "");
+    setComplemento(fornecedor.complemento || "");
+    setBairro(fornecedor.bairro || "");
+    setCidade(fornecedor.cidade || "");
+    setEstado(fornecedor.estado || "");
+    setCep(fornecedor.cep ? formatarCEP(fornecedor.cep) : "");
     setTelefone(fornecedor.telefone ? formatarTelefone(fornecedor.telefone) : "");
     setEmail(fornecedor.email || "");
   };
@@ -138,6 +169,8 @@ export default function FornecedoresPage() {
         <h2 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px' }}>
           {editandoId ? "Editar Fornecedor" : "Adicionar Fornecedor"}
         </h2>
+        
+        {/* Primeira linha - Dados principais */}
         <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
           <input
             type="text"
@@ -179,15 +212,95 @@ export default function FornecedoresPage() {
             }}
           />
         </div>
+
+        {/* Segunda linha - Endereço */}
         <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
           <input
             type="text"
-            placeholder="Endereço"
-            value={endereco}
-            onChange={(e) => setEndereco(e.target.value)}
+            placeholder="Logradouro"
+            value={logradouro}
+            onChange={(e) => setLogradouro(e.target.value)}
             style={{
               flex: '2',
-              minWidth: '300px',
+              minWidth: '200px',
+              padding: '8px 12px',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px'
+            }}
+          />
+          <input
+            type="text"
+            placeholder="Número"
+            value={numero}
+            onChange={(e) => setNumero(e.target.value)}
+            style={{
+              width: '100px',
+              padding: '8px 12px',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px'
+            }}
+          />
+          <input
+            type="text"
+            placeholder="Complemento"
+            value={complemento}
+            onChange={(e) => setComplemento(e.target.value)}
+            style={{
+              width: '150px',
+              padding: '8px 12px',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px'
+            }}
+          />
+        </div>
+
+        {/* Terceira linha - Endereço continuacao */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+          <input
+            type="text"
+            placeholder="Bairro"
+            value={bairro}
+            onChange={(e) => setBairro(e.target.value)}
+            style={{
+              width: '150px',
+              padding: '8px 12px',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px'
+            }}
+          />
+          <input
+            type="text"
+            placeholder="Cidade"
+            value={cidade}
+            onChange={(e) => setCidade(e.target.value)}
+            style={{
+              width: '150px',
+              padding: '8px 12px',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px'
+            }}
+          />
+          <input
+            type="text"
+            placeholder="Estado"
+            value={estado}
+            onChange={(e) => setEstado(e.target.value)}
+            maxLength={2}
+            style={{
+              width: '80px',
+              padding: '8px 12px',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px'
+            }}
+          />
+          <input
+            type="text"
+            placeholder="CEP"
+            value={cep}
+            onChange={(e) => setCep(formatarCEP(e.target.value))}
+            maxLength={9}
+            style={{
+              width: '120px',
               padding: '8px 12px',
               border: '1px solid #d1d5db',
               borderRadius: '4px'
@@ -207,6 +320,7 @@ export default function FornecedoresPage() {
             }}
           />
         </div>
+
         <button
           onClick={salvarFornecedor}
           style={{
@@ -230,7 +344,13 @@ export default function FornecedoresPage() {
               setEditandoId(null);
               setRazaoSocial("");
               setCnpj("");
-              setEndereco("");
+              setLogradouro("");
+              setNumero("");
+              setComplemento("");
+              setBairro("");
+              setCidade("");
+              setEstado("");
+              setCep("");
               setTelefone("");
               setEmail("");
             }}
@@ -289,7 +409,7 @@ export default function FornecedoresPage() {
                 <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>ID</th>
                 <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>Razão Social</th>
                 <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>CNPJ</th>
-                <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>E-mail</th>
+                <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>Cidade/UF</th>
                 <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>Telefone</th>
                 <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>Ações</th>
               </tr>
@@ -306,7 +426,7 @@ export default function FornecedoresPage() {
                       {fornecedor.cnpj ? formatarCNPJ(fornecedor.cnpj) : '-'}
                     </td>
                     <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>
-                      {fornecedor.email || '-'}
+                      {fornecedor.cidade && fornecedor.estado ? `${fornecedor.cidade}/${fornecedor.estado}` : '-'}
                     </td>
                     <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>
                       {fornecedor.telefone ? formatarTelefone(fornecedor.telefone) : '-'}

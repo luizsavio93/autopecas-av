@@ -36,7 +36,19 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { razaoSocial, cnpj, endereco, telefone, email } = await request.json();
+    const { 
+      razaoSocial, 
+      cnpj, 
+      email, 
+      telefone,
+      logradouro,
+      numero,
+      complemento,
+      bairro,
+      cidade,
+      estado,
+      cep
+    } = await request.json();
 
     if (!razaoSocial) {
       return NextResponse.json(
@@ -66,9 +78,15 @@ export async function PUT(
       data: {
         razaoSocial,
         cnpj: cnpj || null,
-        endereco: endereco || null,
-        telefone: telefone || null,
         email: email || null,
+        telefone: telefone || null,
+        logradouro: logradouro || null,
+        numero: numero || null,
+        complemento: complemento || null,
+        bairro: bairro || null,
+        cidade: cidade || null,
+        estado: estado || null,
+        cep: cep || null,
       },
     });
 

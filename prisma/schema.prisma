@@ -39,17 +39,21 @@ model Cliente {
 
 // ✅ NOVO: Modelo Fornecedor
 model Fornecedor {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          Int      @id @default(autoincrement())
   razaoSocial String
   cnpj        String?  @unique
-  endereco    String?
-  telefone    String?
   email       String?
-  produtos    Produto[]
+  telefone    String?
+  // Campos de endereço separados
+  logradouro  String?
+  numero      String?
+  complemento String?
+  bairro      String?
+  cidade      String?
+  estado      String?
+  cep         String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  @@map("fornecedores")
 }
 
 model Venda {
