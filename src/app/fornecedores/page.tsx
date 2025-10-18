@@ -1,24 +1,25 @@
 "use client";
 import { useEffect, useState } from "react";
 
-export default function ClientesPage() {
-  const [clientes, setClientes] = useState<any[]>([]);
-  const [nome, setNome] = useState("");
-  const [email, setEmail] = useState("");
+export default function FornecedoresPage() {
+  const [fornecedores, setFornecedores] = useState<any[]>([]);
+  const [razaoSocial, setRazaoSocial] = useState("");
+  const [cnpj, setCnpj] = useState("");
+  const [endereco, setEndereco] = useState("");
   const [telefone, setTelefone] = useState("");
-  const [cpf, setCpf] = useState("");
-  const [endereco, setEndereco] = useState(""); // ✅ NOVO
+  const [email, setEmail] = useState("");
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
   const [carregando, setCarregando] = useState(false);
 
-  // Formatar CPF enquanto digita
-  const formatarCPF = (value: string) => {
+  // Formatar CNPJ enquanto digita
+  const formatarCNPJ = (value: string) => {
     const numbers = value.replace(/\D/g, '');
-    if (numbers.length <= 3) return numbers;
-    if (numbers.length <= 6) return `${numbers.slice(0, 3)}.${numbers.slice(3)}`;
-    if (numbers.length <= 9) return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6)}`;
-    return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6, 9)}-${numbers.slice(9, 11)}`;
+    if (numbers.length <= 2) return numbers;
+    if (numbers.length <= 5) return `${numbers.slice(0, 2)}.${numbers.slice(2)}`;
+    if (numbers.length <= 8) return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(5)}`;
+    if (numbers.length <= 12) return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(5, 8)}/${numbers.slice(8)}`;
+    return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(5, 8)}/${numbers.slice(8, 12)}-${numbers.slice(12, 14)}`;
   };
 
   // Formatar telefone enquanto digita
@@ -30,172 +31,122 @@ export default function ClientesPage() {
     return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
   };
 
-  // ✅ VALIDAÇÃO DE CPF SIMPLIFICADA - ACEITA QUALQUER CPF COM 11 DÍGITOS
-  const validarCPF = (cpf: string) => {
-    cpf = cpf.replace(/\D/g, '');
-    
-    // Campo opcional - se estiver vazio, é válido
-    if (cpf === '') return true;
-    
-    // Para desenvolvimento, aceita qualquer CPF com 11 dígitos
-    if (cpf.length === 11) {
-      console.log("✅ CPF aceito:", cpf);
-      return true;
-    }
-    
-    console.log("❌ CPF inválido - deve ter 11 dígitos:", cpf);
-    return false;
-  };
-
-  // ✅ VALIDAÇÃO DE EMAIL
-  const validarEmail = (email: string) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
-  };
-
-  // Carregar clientes
-  const carregarClientes = async () => {
+  // Carregar fornecedores
+  const carregarFornecedores = async () => {
     setCarregando(true);
     try {
-      const res = await fetch("/api/clientes");
+      const res = await fetch("/api/fornecedores");
       const data = await res.json();
-      setClientes(Array.isArray(data) ? data : []);
+      setFornecedores(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("Erro ao carregar clientes:", error);
-      alert("Erro ao carregar clientes!");
+      console.error("Erro ao carregar fornecedores:", error);
+      alert("Erro ao carregar fornecedores!");
     } finally {
       setCarregando(false);
     }
   };
 
-  // ✅ FUNÇÃO ATUALIZADA - Inclui endereço
-  const salvarCliente = async () => {
-    if (!nome.trim()) {
-      alert("Preencha o nome do cliente!");
-      return;
-    }
-
-    // Validar CPF
-    const cpfNumeros = cpf.replace(/\D/g, '');
-    if (cpfNumeros && !validarCPF(cpfNumeros)) {
-      alert("CPF inválido!");
-      return;
-    }
-
-    // Validar email
-    if (email && !validarEmail(email)) {
-      alert("E-mail inválido!");
+  // Salvar/Editar fornecedor
+  const salvarFornecedor = async () => {
+    if (!razaoSocial.trim()) {
+      alert("Preencha a razão social do fornecedor!");
       return;
     }
 
     try {
-      const clienteData = { 
-        nome: nome.trim(), 
-        email: email.trim() || null,
+      const fornecedorData = { 
+        razaoSocial: razaoSocial.trim(), 
+        cnpj: cnpj.replace(/\D/g, '') || null,
+        endereco: endereco.trim() || null,
         telefone: telefone.replace(/\D/g, '') || null,
-        cpf: cpfNumeros || null,
-        endereco: endereco.trim() || null // ✅ NOVO
+        email: email.trim() || null,
       };
 
       if (editandoId) {
-        await fetch(`/api/clientes/${editandoId}`, {
+        await fetch(`/api/fornecedores/${editandoId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(clienteData),
+          body: JSON.stringify(fornecedorData),
         });
       } else {
-        await fetch("/api/clientes", {
+        await fetch("/api/fornecedores", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(clienteData),
+          body: JSON.stringify(fornecedorData),
         });
       }
 
-      // ✅ LIMPAR FORMULÁRIO ATUALIZADO
-      setNome("");
-      setEmail("");
+      // Limpar formulário
+      setRazaoSocial("");
+      setCnpj("");
+      setEndereco("");
       setTelefone("");
-      setCpf("");
-      setEndereco(""); // ✅ NOVO
+      setEmail("");
       setEditandoId(null);
       
-      carregarClientes();
-      alert(editandoId ? "Cliente atualizado!" : "Cliente adicionado!");
+      carregarFornecedores();
+      alert(editandoId ? "Fornecedor atualizado!" : "Fornecedor adicionado!");
     } catch (error) {
       console.error(error);
-      alert("Erro ao salvar cliente!");
+      alert("Erro ao salvar fornecedor!");
     }
   };
 
-  // Excluir cliente
-  const excluirCliente = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este cliente?")) return;
+  // Excluir fornecedor
+  const excluirFornecedor = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir este fornecedor?")) return;
     
     try {
-      await fetch(`/api/clientes/${id}`, { method: "DELETE" });
-      carregarClientes();
-      alert("Cliente excluído com sucesso!");
+      await fetch(`/api/fornecedores/${id}`, { method: "DELETE" });
+      carregarFornecedores();
+      alert("Fornecedor excluído com sucesso!");
     } catch (error) {
-      console.error("Erro ao excluir cliente:", error);
-      alert("Erro ao excluir cliente!");
+      console.error("Erro ao excluir fornecedor:", error);
+      alert("Erro ao excluir fornecedor!");
     }
   };
 
-  // ✅ FUNÇÃO ATUALIZADA - Inclui endereço
-  const editarCliente = (cliente: any) => {
-    setEditandoId(cliente.id);
-    setNome(cliente.nome || "");
-    setEmail(cliente.email || "");
-    setTelefone(cliente.telefone ? formatarTelefone(cliente.telefone) : "");
-    setCpf(cliente.cpf ? formatarCPF(cliente.cpf) : "");
-    setEndereco(cliente.endereco || ""); // ✅ NOVO
+  // Editar fornecedor
+  const editarFornecedor = (fornecedor: any) => {
+    setEditandoId(fornecedor.id);
+    setRazaoSocial(fornecedor.razaoSocial || "");
+    setCnpj(fornecedor.cnpj ? formatarCNPJ(fornecedor.cnpj) : "");
+    setEndereco(fornecedor.endereco || "");
+    setTelefone(fornecedor.telefone ? formatarTelefone(fornecedor.telefone) : "");
+    setEmail(fornecedor.email || "");
   };
 
-  // ✅ FUNÇÃO ATUALIZADA - Inclui busca por endereço
-  const clientesFiltrados = clientes.filter(cliente =>
-    cliente.nome.toLowerCase().includes(busca.toLowerCase()) ||
-    cliente.cpf?.includes(busca) ||
-    cliente.email?.toLowerCase().includes(busca.toLowerCase()) ||
-    cliente.telefone?.includes(busca) ||
-    cliente.endereco?.toLowerCase().includes(busca.toLowerCase()) // ✅ NOVO
+  // Fornecedores filtrados pela busca
+  const fornecedoresFiltrados = fornecedores.filter(fornecedor =>
+    fornecedor.razaoSocial.toLowerCase().includes(busca.toLowerCase()) ||
+    fornecedor.cnpj?.includes(busca) ||
+    fornecedor.email?.toLowerCase().includes(busca.toLowerCase())
   );
 
-  // ✅ FUNÇÃO PARA CANCELAR EDIÇÃO
-  const cancelarEdicao = () => {
-    setEditandoId(null);
-    setNome("");
-    setEmail("");
-    setTelefone("");
-    setCpf("");
-    setEndereco(""); // ✅ NOVO
-  };
-
   useEffect(() => {
-    carregarClientes();
+    carregarFornecedores();
   }, []);
 
   return (
     <div style={{ padding: '24px' }}>
       <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>
-        Cadastro de Clientes
+        Cadastro de Fornecedores
       </h1>
 
       {/* Formulário */}
       <div style={{ marginBottom: '24px' }}>
         <h2 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px' }}>
-          {editandoId ? "Editar Cliente" : "Adicionar Cliente"}
+          {editandoId ? "Editar Fornecedor" : "Adicionar Fornecedor"}
         </h2>
-        
-        {/* ✅ PRIMEIRA LINHA - Campos principais */}
         <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
           <input
             type="text"
-            placeholder="Nome completo *"
-            value={nome}
-            onChange={(e) => setNome(e.target.value)}
+            placeholder="Razão Social *"
+            value={razaoSocial}
+            onChange={(e) => setRazaoSocial(e.target.value)}
             style={{
               flex: '1',
-              minWidth: '200px',
+              minWidth: '250px',
               padding: '8px 12px',
               border: '1px solid #d1d5db',
               borderRadius: '4px'
@@ -203,12 +154,12 @@ export default function ClientesPage() {
           />
           <input
             type="text"
-            placeholder="CPF"
-            value={cpf}
-            onChange={(e) => setCpf(formatarCPF(e.target.value))}
-            maxLength={14}
+            placeholder="CNPJ"
+            value={cnpj}
+            onChange={(e) => setCnpj(formatarCNPJ(e.target.value))}
+            maxLength={18}
             style={{
-              width: '150px',
+              width: '200px',
               padding: '8px 12px',
               border: '1px solid #d1d5db',
               borderRadius: '4px'
@@ -222,6 +173,21 @@ export default function ClientesPage() {
             style={{
               flex: '1',
               minWidth: '200px',
+              padding: '8px 12px',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px'
+            }}
+          />
+        </div>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+          <input
+            type="text"
+            placeholder="Endereço"
+            value={endereco}
+            onChange={(e) => setEndereco(e.target.value)}
+            style={{
+              flex: '2',
+              minWidth: '300px',
               padding: '8px 12px',
               border: '1px solid #d1d5db',
               borderRadius: '4px'
@@ -241,26 +207,8 @@ export default function ClientesPage() {
             }}
           />
         </div>
-
-        {/* ✅ SEGUNDA LINHA - Campo endereço */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
-          <input
-            type="text"
-            placeholder="Endereço completo"
-            value={endereco}
-            onChange={(e) => setEndereco(e.target.value)}
-            style={{
-              flex: '1',
-              minWidth: '300px',
-              padding: '8px 12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '4px'
-            }}
-          />
-        </div>
-
         <button
-          onClick={salvarCliente}
+          onClick={salvarFornecedor}
           style={{
             backgroundColor: '#2563eb',
             color: 'white',
@@ -274,11 +222,18 @@ export default function ClientesPage() {
           onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
           onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
         >
-          {editandoId ? "Salvar Alterações" : "Adicionar Cliente"}
+          {editandoId ? "Salvar Alterações" : "Adicionar Fornecedor"}
         </button>
         {editandoId && (
           <button
-            onClick={cancelarEdicao}
+            onClick={() => {
+              setEditandoId(null);
+              setRazaoSocial("");
+              setCnpj("");
+              setEndereco("");
+              setTelefone("");
+              setEmail("");
+            }}
             style={{
               backgroundColor: '#6b7280',
               color: 'white',
@@ -296,11 +251,11 @@ export default function ClientesPage() {
         )}
       </div>
 
-      {/* ✅ BUSCA DE CLIENTES ATUALIZADA */}
+      {/* Busca de Fornecedores */}
       <div style={{ marginBottom: '16px' }}>
         <input
           type="text"
-          placeholder="Buscar clientes por nome, CPF, email, telefone ou endereço..."
+          placeholder="Buscar fornecedores por razão social, CNPJ ou email..."
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
           style={{
@@ -313,15 +268,15 @@ export default function ClientesPage() {
         />
       </div>
 
-      {/* ✅ TABELA ATUALIZADA - Coluna endereço */}
+      {/* Tabela de Fornecedores */}
       <div>
         <h2 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px' }}>
-          Clientes Cadastrados {clientesFiltrados.length > 0 && `(${clientesFiltrados.length})`}
+          Fornecedores Cadastrados {fornecedoresFiltrados.length > 0 && `(${fornecedoresFiltrados.length})`}
         </h2>
         
         {carregando ? (
           <div style={{ textAlign: 'center', padding: '20px' }}>
-            Carregando clientes...
+            Carregando fornecedores...
           </div>
         ) : (
           <table style={{ 
@@ -332,38 +287,34 @@ export default function ClientesPage() {
             <thead>
               <tr style={{ backgroundColor: '#f3f4f6' }}>
                 <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>ID</th>
-                <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>Nome</th>
-                <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>CPF</th>
+                <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>Razão Social</th>
+                <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>CNPJ</th>
                 <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>E-mail</th>
                 <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>Telefone</th>
-                <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>Endereço</th> {/* ✅ NOVO */}
                 <th style={{ border: '1px solid #d1d5db', padding: '8px', textAlign: 'left' }}>Ações</th>
               </tr>
             </thead>
             <tbody>
-              {clientesFiltrados.length > 0 ? (
-                clientesFiltrados.map((cliente: any, index: number) => (
-                  <tr key={cliente.id}>
+              {fornecedoresFiltrados.length > 0 ? (
+                fornecedoresFiltrados.map((fornecedor: any, index: number) => (
+                  <tr key={fornecedor.id}>
                     <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>
                       {index + 1}
                     </td>
-                    <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>{cliente.nome}</td>
+                    <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>{fornecedor.razaoSocial}</td>
                     <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>
-                      {cliente.cpf ? formatarCPF(cliente.cpf) : '-'}
+                      {fornecedor.cnpj ? formatarCNPJ(fornecedor.cnpj) : '-'}
                     </td>
                     <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>
-                      {cliente.email || '-'}
+                      {fornecedor.email || '-'}
                     </td>
                     <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>
-                      {cliente.telefone ? formatarTelefone(cliente.telefone) : '-'}
-                    </td>
-                    <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>
-                      {cliente.endereco || '-'} {/* ✅ NOVO */}
+                      {fornecedor.telefone ? formatarTelefone(fornecedor.telefone) : '-'}
                     </td>
                     <td style={{ border: '1px solid #d1d5db', padding: '8px' }}>
                       <div style={{ display: 'flex', gap: '4px' }}>
                         <button
-                          onClick={() => editarCliente(cliente)}
+                          onClick={() => editarFornecedor(fornecedor)}
                           style={{
                             backgroundColor: '#d97706',
                             color: 'white',
@@ -380,7 +331,7 @@ export default function ClientesPage() {
                           Editar
                         </button>
                         <button
-                          onClick={() => excluirCliente(cliente.id)}
+                          onClick={() => excluirFornecedor(fornecedor.id)}
                           style={{
                             backgroundColor: '#dc2626',
                             color: 'white',
@@ -402,8 +353,8 @@ export default function ClientesPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', padding: '16px' }}> {/* ✅ ATUALIZADO colSpan */}
-                    {busca ? "Nenhum cliente encontrado para a busca." : "Nenhum cliente cadastrado."}
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '16px' }}>
+                    {busca ? "Nenhum fornecedor encontrado para a busca." : "Nenhum fornecedor cadastrado."}
                   </td>
                 </tr>
               )}

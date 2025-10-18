@@ -13,6 +13,35 @@ export async function OPTIONS() {
   return NextResponse.json({}, { headers: corsHeaders });
 }
 
+// ✅ GET → Buscar produto específico
+export async function GET(req: Request, { params }: { params: { id: string } }) {
+  try {
+    const id = params.id;
+
+    const produto = await prisma.produto.findUnique({
+      where: { id },
+      include: {
+        fornecedor: true, // ✅ NOVO: Incluir dados do fornecedor
+      }
+    });
+
+    if (!produto) {
+      return NextResponse.json(
+        { error: "Produto não encontrado" },
+        { status: 404, headers: corsHeaders }
+      );
+    }
+
+    return NextResponse.json(produto, { headers: corsHeaders });
+  } catch (error) {
+    console.error("Erro no GET /api/produtos/[id]:", error);
+    return NextResponse.json(
+      { error: "Erro ao buscar produto" },
+      { status: 500, headers: corsHeaders }
+    );
+  }
+}
+
 // ✅ PUT → Atualizar produto
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -26,7 +55,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     }
 
     const body = await req.json();
-    const { nome, descricao, quantidade, preco } = body;
+    const { nome, descricao, quantidade, preco, precoCusto, fabricante, fornecedorId } = body; // ✅ NOVOS CAMPOS
 
     if (!nome?.trim()) {
       return NextResponse.json(
@@ -44,6 +73,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
     const quantidadeNum = Number(quantidade);
     const precoNum = Number(preco);
+    const precoCustoNum = precoCusto ? Number(precoCusto) : null; // ✅ NOVO
 
     if (isNaN(quantidadeNum) || isNaN(precoNum)) {
       return NextResponse.json(
@@ -59,14 +89,33 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       );
     }
 
+    // ✅ Verificar se fornecedor existe (se fornecido)
+    if (fornecedorId) {
+      const fornecedor = await prisma.fornecedor.findUnique({
+        where: { id: fornecedorId }
+      });
+      if (!fornecedor) {
+        return NextResponse.json(
+          { error: "Fornecedor não encontrado" },
+          { status: 400, headers: corsHeaders }
+        );
+      }
+    }
+
     const produtoAtualizado = await prisma.produto.update({
-      where: { id }, // ✅ agora id é string
+      where: { id },
       data: {
         nome: nome.trim(),
         descricao: (descricao || "").trim(),
         quantidade: quantidadeNum,
         preco: precoNum,
+        precoCusto: precoCustoNum, // ✅ NOVO
+        fabricante: (fabricante || "").trim(), // ✅ NOVO
+        fornecedorId: fornecedorId || null, // ✅ NOVO
       },
+      include: {
+        fornecedor: true, // ✅ NOVO: Incluir dados do fornecedor
+      }
     });
 
     return NextResponse.json(produtoAtualizado, { headers: corsHeaders });
@@ -87,7 +136,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-// ✅ DELETE → Excluir produto
+// ✅ DELETE → Excluir produto (mantido igual)
 export async function DELETE(req: Request, { params }: { params: { id: string } }) {
   try {
     const id = params.id;
@@ -100,7 +149,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     }
 
     const produto = await prisma.produto.findUnique({
-      where: { id }, // ✅ string aqui também
+      where: { id },
     });
 
     if (!produto) {

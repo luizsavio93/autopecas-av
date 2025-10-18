@@ -17,6 +17,9 @@ export async function OPTIONS() {
 export async function GET() {
   try {
     const produtos = await prisma.produto.findMany({
+      include: {
+        fornecedor: true, // ✅ NOVO: Incluir dados do fornecedor
+      },
       orderBy: { nome: 'asc' }
     });
     return NextResponse.json(Array.isArray(produtos) ? produtos : [], {
@@ -38,7 +41,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { nome, descricao, quantidade, preco } = body;
+    const { nome, descricao, quantidade, preco, precoCusto, fabricante, fornecedorId } = body; // ✅ NOVOS CAMPOS
 
     // ✅ Validação melhorada
     if (!nome?.trim()) {
@@ -57,6 +60,7 @@ export async function POST(req: Request) {
 
     const quantidadeNum = Number(quantidade);
     const precoNum = Number(preco);
+    const precoCustoNum = precoCusto ? Number(precoCusto) : null; // ✅ NOVO
 
     if (isNaN(quantidadeNum) || isNaN(precoNum)) {
       return NextResponse.json(
@@ -72,13 +76,32 @@ export async function POST(req: Request) {
       );
     }
 
+    // ✅ Verificar se fornecedor existe (se fornecido)
+    if (fornecedorId) {
+      const fornecedor = await prisma.fornecedor.findUnique({
+        where: { id: fornecedorId }
+      });
+      if (!fornecedor) {
+        return NextResponse.json(
+          { error: "Fornecedor não encontrado" },
+          { status: 400, headers: corsHeaders }
+        );
+      }
+    }
+
     const novoProduto = await prisma.produto.create({
       data: {
         nome: nome.trim(),
         descricao: (descricao || "").trim(),
         quantidade: quantidadeNum,
         preco: precoNum,
+        precoCusto: precoCustoNum, // ✅ NOVO
+        fabricante: (fabricante || "").trim(), // ✅ NOVO
+        fornecedorId: fornecedorId || null, // ✅ NOVO
       },
+      include: {
+        fornecedor: true, // ✅ NOVO: Incluir dados do fornecedor
+      }
     });
 
     return NextResponse.json(novoProduto, { 

@@ -22,7 +22,7 @@ export async function GET() {
 // POST - Criar novo cliente
 export async function POST(request: NextRequest) {
   try {
-    const { nome, email, telefone, cpf } = await request.json();
+    const { nome, email, telefone, cpf, endereco } = await request.json(); // ✅ NOVO: endereco
 
     if (!nome) {
       return NextResponse.json(
@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
         email: email || null,
         telefone: telefone || null,
         cpf: cpf || null,
+        endereco: endereco || null, // ✅ NOVO
       },
     });
 

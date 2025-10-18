@@ -11,11 +11,15 @@ model Produto {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   nome        String
   descricao   String?
-  preco       Float
+  precoCusto  Float?   // ✅ NOVO - preço de custo
+  preco       Float    // preço de venda
   quantidade  Int
+  fabricante  String?  // ✅ NOVO - fabricante
+  fornecedor  Fornecedor? @relation(fields: [fornecedorId], references: [id]) // ✅ NOVO
+  fornecedorId String? @db.ObjectId // ✅ NOVO
+  vendas      Venda[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  vendas      Venda[]
 
   @@map("produtos")
 }
@@ -26,8 +30,26 @@ model Cliente {
   email     String?
   telefone  String?
   cpf       String?   @unique
+  endereco  String?   // ✅ NOVO - endereço
   vendas    Venda[]
   createdAt DateTime @default(now())
+
+  @@map("clientes")
+}
+
+// ✅ NOVO: Modelo Fornecedor
+model Fornecedor {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  razaoSocial String
+  cnpj        String?  @unique
+  endereco    String?
+  telefone    String?
+  email       String?
+  produtos    Produto[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("fornecedores")
 }
 
 model Venda {

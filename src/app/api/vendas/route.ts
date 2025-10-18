@@ -8,8 +8,12 @@ export async function GET() {
   try {
     const vendas = await prisma.venda.findMany({
       include: {
-        produto: true,
-        cliente: true, // ✅ Incluir dados do cliente
+        produto: {
+          include: {
+            fornecedor: true, // ✅ NOVO: Incluir fornecedor do produto
+          }
+        },
+        cliente: true,
       },
       orderBy: { data: 'desc' }
     });
@@ -23,7 +27,7 @@ export async function GET() {
   }
 }
 
-// POST - Criar nova venda
+// POST - Criar nova venda (mantido igual)
 export async function POST(request: NextRequest) {
   try {
     const { produtoId, clienteId, quantidade } = await request.json();
@@ -58,12 +62,16 @@ export async function POST(request: NextRequest) {
     const venda = await prisma.venda.create({
       data: {
         produtoId,
-        clienteId: clienteId || null, // ✅ Cliente opcional
+        clienteId: clienteId || null,
         quantidade: parseInt(quantidade),
       },
       include: {
-        produto: true,
-        cliente: true, // ✅ Incluir dados do cliente
+        produto: {
+          include: {
+            fornecedor: true, // ✅ NOVO: Incluir fornecedor do produto
+          }
+        },
+        cliente: true,
       }
     });
 
