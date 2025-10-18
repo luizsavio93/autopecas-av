@@ -80,7 +80,6 @@ export async function PUT(
         cnpj: cnpj || null,
         email: email || null,
         telefone: telefone || null,
-        logradouro: logradouro || null,
         numero: numero || null,
         complemento: complemento || null,
         bairro: bairro || null,

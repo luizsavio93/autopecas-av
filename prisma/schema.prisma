@@ -37,14 +37,14 @@ model Cliente {
   @@map("clientes")
 }
 
-// ✅ NOVO: Modelo Fornecedor
+// ✅ NOVO: Modelo Fornecedor COMPLETO
 model Fornecedor {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId // ✅ CORRIGIDO: String para MongoDB
   razaoSocial String
   cnpj        String?  @unique
   email       String?
   telefone    String?
-  // Campos de endereço separados
+  // ✅ CAMPOS DE ENDEREÇO SEPARADOS (COMPLETOS)
   logradouro  String?
   numero      String?
   complemento String?
@@ -52,8 +52,11 @@ model Fornecedor {
   cidade      String?
   estado      String?
   cep         String?
+  produtos    Produto[] // ✅ RELAÇÃO COM PRODUTOS
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@map("fornecedores")
 }
 
 model Venda {
